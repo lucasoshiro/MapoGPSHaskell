@@ -2,6 +2,8 @@ import Pages
 import Pointset
 import Prelude hiding ((<>))
 import Data.Maybe (fromJust)
+import Control.Monad
+
 import Numeric.LinearAlgebra (fromLists, toLists, pinv, (<>))
 
 import qualified Data.List as List
@@ -97,10 +99,9 @@ coordFromStr s = (t !! 0, t !! 1)
     t = map (read . Text.unpack . Text.strip) $ Text.splitOn (Text.pack ",") $ Text.pack s :: [Double]
 
 main :: IO ()
-main = do
+main = forever $ do
   inputStr <- getLine
   putStrLn $
     let
       (p, l, n) =  mapoFromCoord $ coordFromStr inputStr
     in p ++ " " ++ [l] ++ " " ++ show n
-  main
