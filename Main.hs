@@ -8,8 +8,12 @@ import qualified Data.List as List
 import qualified Data.Text as Text
 import qualified Data.Map  as Map
 
+type VCoord = (Double, Double)
+type Coord = (Double, Double)
+type Mapo = (String, Char, Int)
+
 training = concat [stations, museums, stadiums]
-origin = (-23.55039, -46.63395) :: (Double, Double)
+origin = (-23.55039, -46.63395) :: Coord
 
 vCoordPage :: [[Text.Text]]
 vCoordPage = [
@@ -27,7 +31,7 @@ pageVCoord =
 alphabet    = "ABCDEFHJLMNOPRSTUVXZ"
 alphabetInv = Map.fromList $ zip alphabet [0..]
 
-vcoordFromMapo :: ([Char], Char, Int) -> (Double, Double)
+vcoordFromMapo :: Mapo -> VCoord
 vcoordFromMapo (page, letter, number) = (y, x)
   where
     yx = fromJust $ flip Map.lookup pageVCoord $ Text.pack page
@@ -37,7 +41,7 @@ vcoordFromMapo (page, letter, number) = (y, x)
         (0.5 + (fromJust $ Map.lookup letter alphabetInv)) /
         (fromIntegral $ length alphabet)
 
-mapoFromVCoord :: (Double, Double) -> ([Char], Char, Int)
+mapoFromVCoord :: VCoord -> Mapo
 mapoFromVCoord (y, x) = (page, letter, number)
   where
     (i, j) = (floor y, floor x)
@@ -47,7 +51,7 @@ mapoFromVCoord (y, x) = (page, letter, number)
     letter = alphabet !! (round $ rest_j * (fromIntegral $ length alphabet) - 0.5)
     page   = Text.unpack $ vCoordPage !! i !! j
 
-coordToMeters :: (Double, Double) -> (Double, Double) -> (Double, Double)
+coordToMeters :: Coord -> Coord -> (Double, Double)
 coordToMeters origin dest = (dLat, dLng)
   where
     r      = 6371000            -- Earth radius
@@ -79,7 +83,7 @@ r = fromLists pRealDelta
 v = fromLists pVCoord
 w = (pinv r) <> v -- Linear Regression
 
-mapoFromCoord :: (Double, Double) -> ([Char], Char, Int)
+mapoFromCoord :: Coord -> Mapo
 mapoFromCoord (y, x) =
   mapoFromVCoord (v !! 0, v !! 1)
   where
@@ -87,7 +91,7 @@ mapoFromCoord (y, x) =
     r = fromLists [[1, delta_a, delta_b]]
     v = toLists (r <> w) !! 0
   
-coordFromStr :: [Char] -> (Double, Double)
+coordFromStr :: String -> Coord
 coordFromStr s = (t !! 0, t !! 1)
   where
     t = map (read . Text.unpack . Text.strip) $ Text.splitOn (Text.pack ",") $ Text.pack s :: [Double]
